@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1 — 2026-09-07
+
+- Keep the anonymous analytics privacy switch available on narrow screens as
+  an accessible compact control.
+
 ## 1.4.0 — 2026-09-07
 
 - Add privacy-preserving Cloudflare usage analytics for sessions, SVG import
