@@ -1,5 +1,6 @@
 import './style.css';
 import './upgrade.css';
+import './readability.css';
 import { importArtwork } from './importer';
 import { Player, speeds } from './player';
 import { CodeView } from './code-view';
@@ -46,6 +47,7 @@ let art:Artwork|null=null, aborter:AbortController|null=null, importId=0, view:n
 const camera=new Camera(next=>{view=next.slice();if(art){const w=art.frame.clientWidth||art.view[2],h=art.frame.clientHeight||art.view[3],base=Math.min(w/art.view[2],h/art.view[3]);$('zoomLabel').textContent=Math.round(Math.min(w/view[2],h/view[3])/base*100)+'%';}const rect=$('minimapRect');['x','y','width','height'].forEach((key,i)=>rect.setAttribute(key,String(view[i])));});
 const selects=Array.from(document.querySelectorAll<HTMLSelectElement>('select')).map(select=>new SelectControl(select));
 let minimapVisible=true,minimapURL='';
+let chaptersVisible=true;
 let noticeTimer=0;
 function notify(message:string,persistent=false){clearTimeout(noticeTimer);$('notice').textContent=message;$('notice').hidden=false;if(!persistent)noticeTimer=window.setTimeout(()=>$('notice').hidden=true,5500);}
 function localize(){
@@ -85,13 +87,18 @@ function update(){
     $('chapterName').textContent=name==='—'?t('emptyChapter'):name;
     if(cameraChapter!==item.chapter){cameraChapter=item.chapter;
       $('chapterList').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',i===item.chapter));
+      const active=$('chapterList').children[item.chapter] as HTMLElement;
+      if(active&&!$('chapterPanel').hidden){
+        const list=$('chapterList'),top=active.offsetTop-list.offsetTop;
+        if(top<list.scrollTop||top+active.offsetHeight>list.scrollTop+list.clientHeight)list.scrollTop=Math.max(0,top-list.clientHeight/2);
+      }
     }
   }
 }
 player.addEventListener('change',update);
 function renderChapters(){
   if(!art)return;$('chapterList').replaceChildren();
-  art.chapters.forEach((c,i)=>{const b=document.createElement('button');const number=document.createElement('span');number.textContent=String(i+1).padStart(2,'0');const label=document.createElement('span');label.textContent=c.name==='—'?t('emptyChapter'):c.name;b.append(number,label);b.onclick=()=>{player.jump(c.first);$('chapterPanel').hidden=true;};$('chapterList').append(b);});
+  art.chapters.forEach((c,i)=>{const b=document.createElement('button');const number=document.createElement('span');number.textContent=String(i+1).padStart(2,'0');const label=document.createElement('span');label.textContent=c.name==='—'?t('emptyChapter'):c.name;b.append(number,label);b.title=label.textContent;b.classList.toggle('active',i===art!.items[player.first]?.chapter);b.onclick=()=>player.jump(c.first);$('chapterList').append(b);});
   renderTicks();
 }
 function renderTicks(){if(!art)return;$('ticks').replaceChildren();art.chapters.forEach(c=>{const s=player.segments.find(s=>c.first>=s.first&&c.first<=s.last);if(!s)return;const tick=document.createElement('button');tick.style.left=`${s.start/player.total*100}%`;tick.title=c.name;tick.setAttribute('aria-label',c.name);tick.onclick=()=>player.jump(c.first);$('ticks').append(tick);});}
@@ -102,7 +109,7 @@ async function load(raw:string,name:string,id:number,signal:AbortSignal){
     if(id!==importId||signal.aborted){next.frame.remove();return;}
     art=next;code.load(art.lines);$('code').hidden=false;$('codeEmpty').hidden=true;$('empty').hidden=true;$('gesture').hidden=false;$('canvasTools').hidden=false;
     $('filename').textContent=name;$('notes').hidden=!art.warnings.length;cameraChapter=-1;view=art.view.slice();
-    camera.load(art);$<HTMLSelectElement>('cameraMode').value='follow';selects.forEach(s=>s.refresh());
+    toggleChapters(chaptersVisible);camera.load(art);$<HTMLSelectElement>('cameraMode').value='follow';selects.forEach(s=>s.refresh());
     loadMinimap();player.load(art);renderChapters();$('notice').hidden=true;
     if(art.warnings.length)notify(art.warnings.map(k=>t(k as Key)).join(' '));
   } catch(e){if(id===importId && !signal.aborted)notify(t((e instanceof Error && e.message in messages.en?e.message:'failed') as Key));}
@@ -135,7 +142,12 @@ $('seek').addEventListener('input',e=>{const value=Number((e.target as HTMLInput
 const endSeek=()=>{flushSeek();if(resume&&player.time<player.total)player.play();resume=false;};
 $('seek').addEventListener('change',endSeek);$('seek').addEventListener('pointercancel',endSeek);
 $('followCode').onclick=()=>code.setFollow(true);
-$('chaptersButton').onclick=()=>$('chapterPanel').hidden=!$('chapterPanel').hidden;$('closeChapters').onclick=()=>$('chapterPanel').hidden=true;
+function toggleChapters(show:boolean){
+  chaptersVisible=show;const visible=show&&!!art;
+  $('chapterPanel').hidden=!visible;$('canvasPanel').classList.toggle('has-chapters',visible);
+  $('chaptersButton').setAttribute('aria-expanded',String(visible));$('chaptersButton').setAttribute('aria-controls','chapterPanel');$('chaptersButton').setAttribute('aria-pressed',String(visible));
+}
+$('chaptersButton').onclick=()=>toggleChapters(!chaptersVisible);$('closeChapters').onclick=()=>toggleChapters(false);
 $('language').onclick=()=>{lang=lang==='zh'?'en':'zh';try{localStorage.setItem('svg-player-language',lang);}catch{/* optional preference */}localize();};
 function showDialog(title:string,body:string){$('dialogTitle').textContent=title;$('dialogBody').textContent=body;$<HTMLDialogElement>('dialog').showModal();}
 $('help').onclick=()=>showDialog(t('helpTitle'),t('helpBody'));$('notes').onclick=()=>showDialog(t('details'),art!.warnings.map(k=>t(k as Key)).join('\n\n'));

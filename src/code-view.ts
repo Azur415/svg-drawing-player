@@ -2,7 +2,7 @@ export class CodeView {
   private lines:string[]=[];private first=-1;private last=-1;private start=-1;
   private prefix:number[]=[0];private progress=0;private writingLine=-1;
   private complete=false;
-  following=true; private rowHeight=25;
+  following=true; private rowHeight=28;
   constructor(private host:HTMLElement,private onFollow:(following:boolean)=>void){
     host.addEventListener('scroll',()=>this.draw());
     for(const event of ['wheel','touchstart','pointerdown'])host.addEventListener(event,()=>this.setFollow(false),{passive:true});

@@ -16,14 +16,20 @@ export class SelectControl {
       else if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?options.length-1:(i+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options[n]?.focus();}
     };
     document.addEventListener('pointerdown',e=>{if(!this.button.contains(e.target as Node)&&!this.menu.contains(e.target as Node))this.close();});
-    window.addEventListener('resize',()=>this.close());window.addEventListener('scroll',()=>this.close(),true);
+    window.addEventListener('resize',()=>this.position());
+    window.addEventListener('scroll',event=>{
+      const target=event.target;
+      // Source auto-follow and list scrolling must not dismiss an active choice.
+      if(target===document||(target instanceof Element&&target.contains(this.button)))this.position();
+    },true);
     document.addEventListener('fullscreenchange',()=>this.close());
     select.addEventListener('change',()=>this.refresh());
     new MutationObserver(()=>this.refresh()).observe(select,{attributes:true,childList:true,subtree:true,characterData:true});
     this.refresh();
   }
   refresh(){
-    this.button.textContent=this.select.selectedOptions[0]?.textContent||'';
+    const label=this.select.selectedOptions[0]?.textContent||'';
+    if(this.button.textContent!==label)this.button.textContent=label;
     this.button.title=this.select.title||this.select.getAttribute('aria-label')||'';
     this.button.setAttribute('aria-label',this.button.title?this.button.title+': '+this.button.textContent:this.button.textContent);
     this.button.disabled=this.select.disabled;this.button.hidden=this.select.hidden;
@@ -38,11 +44,15 @@ export class SelectControl {
       const b=document.createElement('button');b.type='button';b.setAttribute('role','option');b.setAttribute('aria-selected',String(option.selected));b.textContent=option.textContent;b.disabled=option.disabled;
       b.onclick=()=>{this.select.value=option.value;this.select.dispatchEvent(new Event('change',{bubbles:true}));this.refresh();this.close();this.button.focus();};this.menu.append(b);
     });
-    this.menu.hidden=false;const b=this.button.getBoundingClientRect();const width=Math.max(128,b.width);this.menu.style.width=width+'px';
+    this.menu.hidden=false;this.position();
+    this.menu.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus({preventScroll:true});
+    document.addEventListener('close-selects',this.dismiss,{once:true});
+  }
+  private position(){
+    if(!this.open)return;
+    const b=this.button.getBoundingClientRect();const width=Math.max(144,b.width);this.menu.style.width=width+'px';
     const h=this.menu.offsetHeight;this.menu.style.left=Math.max(8,Math.min(innerWidth-width-8,b.left))+'px';
     this.menu.style.top=(b.top>h+16?b.top-h-8:Math.min(innerHeight-h-8,b.bottom+8))+'px';
-    this.menu.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus();
-    document.addEventListener('close-selects',this.dismiss,{once:true});
   }
   private dismiss=()=>this.close();
   private close(){this.open=false;this.menu.hidden=true;this.button.setAttribute('aria-expanded','false');document.removeEventListener('close-selects',this.dismiss);}

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 — 2026-09-06
+
+- Keep speed menus open during source auto-scroll; selecting a speed takes effect
+  during playback without pausing. Reposition open menus on viewport scrolling.
+- Show chapters in a narrow translucent left rail with a visibility toggle.
+  Chapter navigation keeps the rail open; desktop framing reserves its space.
+- Enlarge the Helvetica-based title, key controls, metadata and source text;
+  add neutral gray surfaces to distinguish nested panels.
+- Add live-speed and persistent chapter navigation regression checks.
+
 ## 1.1.2 — 2026-09-06
 
 - Fit complete chapter bounds to the actual canvas aspect ratio rather than

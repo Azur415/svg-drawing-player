@@ -43,3 +43,26 @@ test('custom selects support selection and keyboard dismissal',async({page})=>{
   await page.locator('#cameraModeMenu').getByRole('option',{name:'Full view',exact:true}).click();await expect(page.locator('#cameraModeTrigger')).toHaveText('Full view');
   await page.evaluate(()=>document.exitFullscreen());
 });
+test('speed menu survives source auto-scroll during live playback',async({page})=>{
+  await page.evaluate(()=>{const p=(window as any).drawingPlayer.player;p.configure('quick',120);p.play();});
+  await page.locator('#speedTrigger').click();
+  const before=await page.evaluate(()=>(window as any).drawingPlayer.player.time);
+  await page.evaluate(()=>document.querySelector('#code')!.dispatchEvent(new Event('scroll')));
+  await page.waitForTimeout(500);
+  await expect(page.locator('#speedMenu')).toBeVisible();
+  expect(await page.evaluate(()=>(window as any).drawingPlayer.player.time)).toBeGreaterThan(before);
+  await page.locator('#speedMenu').getByRole('option',{name:'4×',exact:true}).click();
+  expect(await page.evaluate(()=>{const p=(window as any).drawingPlayer.player;return {speed:p.speed,playing:p.playing};})).toEqual({speed:4,playing:true});
+  await page.locator('#speedTrigger').click();await page.keyboard.press('Escape');await expect(page.locator('#speedMenu')).toBeHidden();
+});
+test('chapter rail stays open on navigation and can be hidden and restored',async({page})=>{
+  await expect(page.locator('#chapterPanel')).toBeVisible();
+  expect((await page.locator('#chapterPanel').boundingBox())!.width).toBeLessThanOrEqual(180);
+  await page.locator('#chapterList button').last().click();
+  await expect(page.locator('#chapterPanel')).toBeVisible();await expect(page.locator('#chapterList button').last()).toHaveClass('active');
+  const inset=await page.locator('#frameHost').boundingBox();
+  await page.locator('#closeChapters').click();await expect(page.locator('#chapterPanel')).toBeHidden();
+  expect((await page.locator('#frameHost').boundingBox())!.width).toBeGreaterThan(inset!.width);
+  await expect(page.locator('#chaptersButton')).toHaveAttribute('aria-expanded','false');
+  await page.locator('#chaptersButton').click();await expect(page.locator('#chapterPanel')).toBeVisible();
+});

@@ -23,7 +23,8 @@ Open the local URL printed by Vite. Drop a `.svg` file or choose the original pa
 - Full source lights up character by character for the current element or batch. The reveal pauses and rewinds with playback. Manual scrolling suspends follow; the follow button restores it. Only visible code rows are mounted.
 - Camera fits the complete chapter bounds to the actual canvas aspect ratio, centered with 10% padding on each side. Small chapters can zoom beyond 2.6×; a 20× safeguard handles near-zero geometry. Framing stays fixed within a chapter and adapts when the canvas is resized. Select Full view for a fixed overview; manual pan/zoom suspends follow. The toggleable mini-map shows the complete composition and current viewport.
 - All future source lines remain faded until playback reaches them. Completed lines stay bright; rewinding restores the corresponding faded state. The Azur. header uses a compact title without a subtitle.
-- Expand chapters, enter canvas fullscreen, or resize the desktop panels. Phones use Canvas / Code tabs. Custom menus support pointer, arrow keys and Escape.
+- Chapters appear in a narrow translucent left rail; hide or restore it with the chapter button. Selecting a chapter keeps it open. Desktop framing reserves space for the rail; phones use an overlay and Canvas / Code tabs.
+- Change speed during playback without pausing: source auto-scroll does not dismiss the menu. Custom menus support pointer, arrow keys and Escape. Larger Helvetica-based headings and neutral gray panels improve readability.
 - Space plays/pauses and arrow keys step through elements outside focused controls. Background tabs pause playback.
 - Switch English / Chinese in the header. Language preference is the only data stored in local storage.
 
