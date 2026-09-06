@@ -1,0 +1,9 @@
+The little pavilion (pavilion.svg) was created for this project in 2026.
+To the extent possible under law, the SVG Drawing Player contributors waive
+all copyright and related or neighboring rights to this example under the
+Creative Commons CC0 1.0 Universal public-domain dedication.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The original building.svg in the neighboring svg-reconstruction directory is
+not part of this distribution. Its presence on a developer's machine enables
+an optional local regression test; no rights to that file are granted here.
