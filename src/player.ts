@@ -9,6 +9,7 @@ export class Player extends EventTarget {
   private active: Active[] = []; private frame = 0; private lastTime = 0;
   private pen: SVGCircleElement | null = null;
   private boundary: number | null = null;
+  get progress(){if(this.time>=this.total)return 1;if(this.boundary!==null)return 0;const s=this.segments[this.current];return s?clamp((this.time-s.start)/s.duration):0;}
   load(art: Artwork) {
     this.pause(); this.clear(); this.art?.frame.remove(); this.art = art;
     art.frame.classList.remove('preparing'); this.rebuild(); this.seek(0); this.play();
@@ -104,6 +105,7 @@ export class Player extends EventTarget {
       if(this.active.some(a=>a.overlay)){
         this.pen=this.art.svg.ownerDocument.createElementNS('http://www.w3.org/2000/svg','circle');
         this.pen.setAttribute('data-player-overlay','');
+        this.pen.setAttribute('data-player-pen','');
         this.pen.style.cssText='fill:#a03d32!important;stroke:#f8f7f0!important;stroke-width:1.5px!important;vector-effect:non-scaling-stroke!important;pointer-events:none!important';
         this.art.svg.append(this.pen);
       }

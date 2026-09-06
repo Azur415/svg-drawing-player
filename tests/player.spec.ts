@@ -27,7 +27,7 @@ test('mouse scrubbing resumes, zoom and splitter work',async({page})=>{
   const box=(await page.locator('#seek').boundingBox())!;
   await page.mouse.move(box.x+box.width*.2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width*.7,box.y+box.height/2,{steps:8});await page.mouse.up();
   const state=await page.evaluate(()=>{const p=(window as any).drawingPlayer.player;return {fraction:p.time/p.total,playing:p.playing};});expect(state.fraction).toBeGreaterThan(.65);expect(state.fraction).toBeLessThan(.8);expect(state.playing).toBe(true);
-  await page.locator('#zoomIn').click();await expect(page.locator('#zoomLabel')).toHaveText('125%');await page.locator('#fit').click();await expect(page.locator('#zoomLabel')).toHaveText('100%');
+  await page.locator('#fit').click();await page.locator('#zoomIn').click();await expect(page.locator('#zoomLabel')).toHaveText('125%');await page.locator('#fit').click();await expect(page.locator('#zoomLabel')).toHaveText('100%');
   await page.locator('#splitter').focus();await page.keyboard.press('ArrowLeft');await expect(page.locator('#splitter')).toHaveAttribute('aria-valuenow','58');
 });
 test('completed pixels match sanitized source including effects and references',async({page})=>{
@@ -35,7 +35,8 @@ test('completed pixels match sanitized source including effects and references',
   await load(page,complex,'effects.svg');
   const safe=await page.evaluate(()=>(window as any).drawingPlayer.art.source);expect(safe).toContain('<use');expect(safe).toContain('id="blur"');
   // Exclude the UI toolbar's fractional-pixel box shadow from artwork pixels.
-  await page.addStyleTag({content:'#canvasTools,#notice{visibility:hidden!important}'});
+  await page.locator('#fit').click();
+  await page.addStyleTag({content:'#canvasTools,#notice,#minimap{visibility:hidden!important}'});
   await page.evaluate(()=>{const p=(window as any).drawingPlayer.player;p.seek(p.total*.4);p.seek(p.total);});
   const completed=await page.locator('.art-frame').screenshot();
   await page.evaluate(()=>{const {art}=(window as any).drawingPlayer;const xml=new DOMParser().parseFromString(art.source,'image/svg+xml');art.frame.contentDocument.body.replaceChildren(art.frame.contentDocument.importNode(xml.documentElement,true));});
@@ -66,13 +67,13 @@ test('seeking is deterministic and final artwork restores original styles',async
   expect(data).toEqual({same:true,restored:true,overlays:0});
   await page.evaluate(()=>{const p=(window as any).drawingPlayer.player;p.seek(p.total*.4);});
   const before=await page.locator('#clock').textContent();await page.locator('#faster').click();expect(await page.locator('#clock').textContent()).toBe(before);
-  await page.selectOption('#mode','full');
+  await page.locator('#modeTrigger').click();await page.locator('#modeMenu').getByRole('option',{name:'Every element'}).click();
   expect(await page.evaluate(()=>(window as any).drawingPlayer.player.playing)).toBe(false);
   await page.locator('#next').click();await page.locator('#previous').click();
   await page.keyboard.press('Tab');
 });
 test('sanitizes scripts and external resources and isolates CSS',async({page})=>{
-  const external:string[]=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:5173')&&!r.url().startsWith('data:'))external.push(r.url());});
+  const external:string[]=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:5173')&&!r.url().startsWith('data:')&&!r.url().startsWith('blob:http://127.0.0.1:5173/'))external.push(r.url());});
   const bad='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" onload="parent.pwned=1"><script>parent.pwned=1</script><style>@import "https://evil.example/a.css"; rect{fill:url(https://evil.example/a);stroke:red} #app{opacity:0}</style><foreignObject width="100" height="100"><div xmlns="http://www.w3.org/1999/xhtml">bad</div></foreignObject><image href="https://evil.example/a.png"/><rect width="90" height="90" fill="u\\72l(https://evil.example/escaped)" style="fill:red;filter:url(https://evil.example/b);animation:test 1s"/><animate attributeName="x"/><use href="https://evil.example/a.svg#x"/></svg>';
   await load(page,bad,'unsafe.svg');
   const data=await page.evaluate(()=>{const {art}=(window as any).drawingPlayer;return{source:art.source,pwned:(window as any).pwned,hostOpacity:getComputedStyle(document.querySelector('#app')!).opacity};});

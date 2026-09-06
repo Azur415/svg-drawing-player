@@ -1,7 +1,11 @@
 import './style.css';
+import './upgrade.css';
 import { importArtwork } from './importer';
 import { Player, speeds } from './player';
 import { CodeView } from './code-view';
+import { Camera, type CameraMode } from './camera';
+import { SelectControl } from './select';
+import packageInfo from '../package.json';
 import { messages, type Key, type Language } from './i18n';
 import type { Artwork, Mode } from './model';
 
@@ -13,11 +17,12 @@ document.querySelector('#app')!.innerHTML=`
  <div class="document-bar"><div class="document-name">${icon('file')}<span id="filename" data-i18n="noFile"></span><span id="filemeta"></span></div><div class="document-actions"><button id="notes" hidden><span class="note-dot"></span><span data-i18n="details"></span></button><button id="download" data-title="download" disabled>${icon('download')}<span data-i18n="download"></span></button></div></div>
  <nav class="mobile-tabs"><button id="canvasTab" class="selected" data-i18n="showCanvas"></button><button id="sourceTab" data-i18n="showSource"></button></nav>
  <main id="workspace" class="workspace">
-  <section id="canvasPanel" class="canvas-panel"><div class="panel-header"><div><span class="panel-index">01 /</span><span data-i18n="canvas"></span></div><div class="panel-actions"><button id="chaptersButton" data-title="chapters" disabled>${icon('layers')}<span data-i18n="chapters"></span></button><label class="camera-label"><input type="checkbox" id="cameraFollow"><span data-i18n="followCamera"></span></label></div></div>
+  <section id="canvasPanel" class="canvas-panel"><div class="panel-header"><div><span class="panel-index">01 /</span><span data-i18n="canvas"></span></div><div class="panel-actions"><button id="chaptersButton" data-title="chapters" disabled>${icon('layers')}<span data-i18n="chapters"></span></button><select id="cameraMode" data-title="cameraMode"><option value="follow" data-i18n="followCamera"></option><option value="overview" data-i18n="overview"></option><option value="manual" data-i18n="manualCamera"></option></select><button id="minimapToggle" data-title="minimap" aria-pressed="true">${icon('fit')}</button></div></div>
    <div id="stage" class="stage"><div id="frameHost" class="frame-host"></div><div id="gesture" class="gesture" hidden></div>
     <div id="empty" class="empty-state"><div class="eyebrow"><span class="red-dot"></span> SVG / DRAWING STUDY</div><div class="line-art" aria-hidden="true"><svg viewBox="0 0 200 140"><path d="M28 108 94 131 176 89 111 67Z M28 108V52L94 77v54m0-54 82-40v52M28 52 109 13l67 24M58 63v37l36 13m17-44v35l41-21V49"/><circle cx="109" cy="13" r="4"/><circle cx="94" cy="77" r="4"/><circle cx="176" cy="89" r="4"/></svg></div><h2 data-i18n="dropTitle"></h2><p data-i18n="dropText"></p><button id="choose" class="dark-button">${icon('upload')}<span data-i18n="choose"></span></button><button id="example" class="example-button"><span data-i18n="example"></span>${icon('arrow')}</button><small data-i18n="limit"></small></div>
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div id="canvasTools" class="canvas-tools" hidden><button id="zoomOut" aria-label="Zoom out">−</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="Zoom in">+</button><span class="tool-separator"></span>${button('fit','fit','fit')}${button('fullscreen','fullscreen','fit')}</div>
+    <aside id="minimap" class="minimap" hidden><div class="minimap-header"><span data-i18n="minimap"></span>${button('minimapClose','close','cross')}</div><div id="minimapBody" class="minimap-body"><img id="minimapImage" alt=""/><svg id="minimapBounds" aria-hidden="true"><rect id="minimapRect"/></svg></div></aside>
     <div id="dropOverlay" class="drop-overlay" hidden>${icon('upload')}<span data-i18n="dropOverlay"></span></div>
    </div><div class="canvas-bottom"><span id="status"><i></i><span data-i18n="ready"></span></span><span id="chapterName">—</span></div>
    <aside id="chapterPanel" class="chapter-panel" hidden><div class="chapter-heading"><strong data-i18n="chapters"></strong>${button('closeChapters','close','cross')}</div><div id="chapterList"></div></aside>
@@ -38,6 +43,9 @@ const t=(key:Key)=>messages[lang][key];
 const player=new Player();
 const code=new CodeView($('code'),following=>{$('followCode').hidden=following;});
 let art:Artwork|null=null, aborter:AbortController|null=null, importId=0, view:number[]=[0,0,1,1], cameraChapter=-1;
+const camera=new Camera(next=>{view=next.slice();if(art)$('zoomLabel').textContent=Math.round(art.view[2]/view[2]*100)+'%';const rect=$('minimapRect');['x','y','width','height'].forEach((key,i)=>rect.setAttribute(key,String(view[i])));});
+const selects=Array.from(document.querySelectorAll<HTMLSelectElement>('select')).map(select=>new SelectControl(select));
+let minimapVisible=true,minimapURL='';
 let noticeTimer=0;
 function notify(message:string,persistent=false){clearTimeout(noticeTimer);$('notice').textContent=message;$('notice').hidden=false;if(!persistent)noticeTimer=window.setTimeout(()=>$('notice').hidden=true,5500);}
 function localize(){
@@ -45,6 +53,7 @@ function localize(){
   document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n as Key));
   document.querySelectorAll<HTMLElement>('[data-title]').forEach(el=>{el.title=t(el.dataset.title as Key);el.setAttribute('aria-label',el.title);});
   if(art){$('filename').textContent=art.name;renderChapters();}
+  selects.forEach(s=>s.refresh());
   update();
 }
 function clock(ms:number){const s=Math.max(0,Math.ceil(ms/1000));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
@@ -69,13 +78,13 @@ function update(){
   $('filemeta').textContent=`${art.items.length.toLocaleString()} ${t('steps')} / ${art.chapters.length} ${t('layers')}`;
   $('stepCount').textContent=`${player.time>=player.total?art.items.length:player.first+1} / ${art.items.length}`;
   if(item && last){
-    code.highlight(item.startLine,last.endLine);
+    code.highlight(item.startLine,last.endLine,Math.min(1,player.progress/.82));
+    camera.follow(player.first,player.last,player.time>=player.total);
     $('lineReadout').textContent=`L ${item.startLine+1}${last.endLine!==item.startLine?' — '+(last.endLine+1):''}`;
     const name=art.chapters[item.chapter].name;
     $('chapterName').textContent=name==='—'?t('emptyChapter'):name;
     if(cameraChapter!==item.chapter){cameraChapter=item.chapter;
       $('chapterList').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',i===item.chapter));
-      if($<HTMLInputElement>('cameraFollow').checked)followChapter();
     }
   }
 }
@@ -93,7 +102,8 @@ async function load(raw:string,name:string,id:number,signal:AbortSignal){
     if(id!==importId||signal.aborted){next.frame.remove();return;}
     art=next;code.load(art.lines);$('code').hidden=false;$('codeEmpty').hidden=true;$('empty').hidden=true;$('gesture').hidden=false;$('canvasTools').hidden=false;
     $('filename').textContent=name;$('notes').hidden=!art.warnings.length;cameraChapter=-1;view=art.view.slice();
-    player.load(art);applyView();renderChapters();$('notice').hidden=true;
+    camera.load(art);$<HTMLSelectElement>('cameraMode').value='follow';selects.forEach(s=>s.refresh());
+    loadMinimap();player.load(art);renderChapters();$('notice').hidden=true;
     if(art.warnings.length)notify(art.warnings.map(k=>t(k as Key)).join(' '));
   } catch(e){if(id===importId && !signal.aborted)notify(t((e instanceof Error && e.message in messages.en?e.message:'failed') as Key));}
 }
@@ -114,7 +124,7 @@ window.addEventListener('dragleave',()=>{dragDepth=Math.max(0,dragDepth-1);if(!d
 window.addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('dropOverlay').hidden=true;if(e.dataTransfer?.files.length)void fileImport(e.dataTransfer.files);});
 $('play').onclick=()=>player.playing?player.pause():player.play();$('restart').onclick=()=>player.restart();$('previous').onclick=()=>player.step(-1);$('next').onclick=()=>player.step(1);
 $('slower').onclick=()=>setSpeed(speeds[Math.max(0,speeds.indexOf(player.speed)-1)]);$('faster').onclick=()=>setSpeed(speeds[Math.min(speeds.length-1,speeds.indexOf(player.speed)+1)]);
-function setSpeed(value:number){player.setSpeed(value);$<HTMLSelectElement>('speed').value=String(value);}
+function setSpeed(value:number){player.setSpeed(value);$<HTMLSelectElement>('speed').value=String(value);selects.forEach(s=>s.refresh());}
 $<HTMLSelectElement>('speed').onchange=e=>setSpeed(Number((e.target as HTMLSelectElement).value));
 function configure(){const mode=$<HTMLSelectElement>('mode').value as Mode;player.configure(mode,Number($<HTMLSelectElement>('duration').value));$('duration').hidden=mode==='full';renderTicks();update();}
 $('mode').onchange=$('duration').onchange=configure;
@@ -131,14 +141,15 @@ function showDialog(title:string,body:string){$('dialogTitle').textContent=title
 $('help').onclick=()=>showDialog(t('helpTitle'),t('helpBody'));$('notes').onclick=()=>showDialog(t('details'),art!.warnings.map(k=>t(k as Key)).join('\n\n'));
 $('closeDialog').onclick=()=>$<HTMLDialogElement>('dialog').close();$('dialog').onclick=e=>{if(e.target===$('dialog'))$<HTMLDialogElement>('dialog').close();};
 $('download').onclick=()=>{if(!art)return;const url=URL.createObjectURL(new Blob([art.source],{type:'image/svg+xml'}));const a=document.createElement('a');a.href=url;a.download=art.name.replace(/\.svg$/i,'')+'.sanitized.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-function applyView(){if(!art)return;art.svg.setAttribute('viewBox',view.join(' '));$('zoomLabel').textContent=Math.round(art.view[2]/view[2]*100)+'%';}
-function manual(){ $<HTMLInputElement>('cameraFollow').checked=false; }
+function applyView(){camera.setManual(view);}
+function manual(){camera.setMode('manual');$<HTMLSelectElement>('cameraMode').value='manual';selects.forEach(s=>s.refresh());}
 function zoom(factor:number){if(!art)return;manual();const width=Math.max(art.view[2]/25,Math.min(art.view[2]*5,view[2]*factor));const ratio=width/view[2];view=[view[0]+view[2]*(1-ratio)/2,view[1]+view[3]*(1-ratio)/2,width,view[3]*ratio];applyView();}
-$('zoomIn').onclick=()=>zoom(.8);$('zoomOut').onclick=()=>zoom(1.25);$('fit').onclick=()=>{if(art){manual();view=art.view.slice();applyView();}};
+$('zoomIn').onclick=()=>zoom(.8);$('zoomOut').onclick=()=>zoom(1.25);$('fit').onclick=()=>{if(art){manual();view=art.view.slice();applyView();camera.setMode('overview');$<HTMLSelectElement>('cameraMode').value='overview';selects.forEach(s=>s.refresh());}};
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasPanel').requestFullscreen();}catch{notify(t('failed'));}};
-function followChapter(){if(!art)return;const item=art.items[player.first];let el:SVGGraphicsElement=item.el as SVGGraphicsElement;let p=el.parentElement;while(p&&p!==art.svg as unknown as Element){if(p.id){el=p as unknown as SVGGraphicsElement;break;}p=p.parentElement;}
-  try{const b=el.getBBox();const root=art.svg.getScreenCTM()!,matrix=root.inverse().multiply(el.getScreenCTM()!);const points=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(matrix));const x=Math.min(...points.map(p=>p.x)),y=Math.min(...points.map(p=>p.y)),w=Math.max(...points.map(p=>p.x))-x,h=Math.max(...points.map(p=>p.y))-y;const pad=Math.max(w,h)*.15;if(w>0&&h>0){view=[x-pad,y-pad,w+pad*2,h+pad*2];applyView();}}catch{/* keep current view */}}
-$<HTMLInputElement>('cameraFollow').onchange=()=>{if($<HTMLInputElement>('cameraFollow').checked)followChapter();};
+$<HTMLSelectElement>('cameraMode').onchange=()=>{camera.setMode($<HTMLSelectElement>('cameraMode').value as CameraMode);camera.follow(player.first,player.last,player.time>=player.total);};
+function loadMinimap(){if(!art)return;if(minimapURL)URL.revokeObjectURL(minimapURL);const doc=new DOMParser().parseFromString(art.source,'image/svg+xml');doc.documentElement.setAttribute('width',String(art.view[2]));doc.documentElement.setAttribute('height',String(art.view[3]));minimapURL=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)],{type:'image/svg+xml'}));$<HTMLImageElement>('minimapImage').src=minimapURL;$('minimapBody').style.aspectRatio=String(art.view[2]/art.view[3]);$('minimapBounds').setAttribute('viewBox',art.view.join(' '));$('minimap').hidden=!minimapVisible;}
+function toggleMinimap(show:boolean){minimapVisible=show;$('minimap').hidden=!show||!art;$('minimapToggle').setAttribute('aria-pressed',String(show));}
+$('minimapClose').onclick=()=>toggleMinimap(false);$('minimapToggle').onclick=()=>toggleMinimap(!minimapVisible);
 $('gesture').addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.001));},{passive:false});
 let pan:{x:number;y:number;view:number[];a:number;d:number}|null=null;
 $('gesture').addEventListener('pointerdown',e=>{if(!art)return;manual();const m=art.svg.getScreenCTM()!.inverse();pan={x:e.clientX,y:e.clientY,view:view.slice(),a:m.a,d:m.d};$('gesture').setPointerCapture(e.pointerId);});
@@ -155,5 +166,6 @@ $('canvasTab').onclick=()=>mobileTab(false);$('sourceTab').onclick=()=>mobileTab
 document.addEventListener('keydown',e=>{if($<HTMLDialogElement>('dialog').open||e.ctrlKey||e.metaKey||e.altKey||/INPUT|SELECT|TEXTAREA|BUTTON/.test((e.target as HTMLElement).tagName)||e.target===$('code'))return;if(e.code==='Space'){e.preventDefault();player.playing?player.pause():player.play();}else if(e.key==='ArrowRight'){e.preventDefault();player.step(1);}else if(e.key==='ArrowLeft'){e.preventDefault();player.step(-1);}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)player.pause();});
 localize();
+document.querySelector('.footer-right')!.append(' / v'+packageInfo.version);
 // Local test hooks are excluded from production builds.
-if(import.meta.env.DEV)(window as unknown as {drawingPlayer:unknown}).drawingPlayer={player,get art(){return art;},load:async(raw:string,name='test.svg')=>{const {id,signal}=beginImport();await load(raw,name,id,signal);}};
+if(import.meta.env.DEV)(window as unknown as {drawingPlayer:unknown}).drawingPlayer={player,camera,get art(){return art;},load:async(raw:string,name='test.svg')=>{const {id,signal}=beginImport();await load(raw,name,id,signal);}};
