@@ -27,6 +27,13 @@ function cleanCSS(value: string, inline: boolean): string {
   } catch { return ''; }
 }
 
+function sameCSS(left: string, right: string, inline: boolean): boolean {
+  try {
+    const context = inline ? 'declarationList' : 'stylesheet';
+    return JSON.stringify(css.parse(left, { context })) === JSON.stringify(css.parse(right, { context }));
+  } catch { return left === right; }
+}
+
 export function sanitizeSVG(raw: string): { source: string; changed: boolean } {
   if (new Blob([raw]).size > 10 * 1024 * 1024) throw Error('size');
   if (!raw.trim()) throw Error('empty');
@@ -45,13 +52,13 @@ export function sanitizeSVG(raw: string): { source: string; changed: boolean } {
   for (const el of Array.from(doc.querySelectorAll('*'))) {
     if (el.localName === 'style') {
       const old = el.textContent || ''; const next = cleanCSS(old, false);
-      if (next !== old) changed = true;
+      if (!sameCSS(old, next, false)) changed = true;
       el.textContent = next;
     }
     for (const attr of Array.from(el.attributes)) {
       const name = attr.localName.toLowerCase(); const value = attr.value.trim();
       if (name === 'style') {
-        const clean = cleanCSS(value, true); if (clean !== value) changed = true;
+        const clean = cleanCSS(value, true); if (!sameCSS(value, clean, true)) changed = true;
         el.setAttribute('style', clean); continue;
       }
       if (name === 'href') {
@@ -168,7 +175,7 @@ export async function importArtwork(raw: string, name: string, host: HTMLElement
         }
         let length = 0;
         try { length = (el as SVGGeometryElement).getTotalLength(); } catch { /* non geometry */ }
-        const trace = geometry.has(el.localName) && length > 0 && cs.filter === 'none' && cs.maskImage === 'none';
+        const trace = geometry.has(el.localName) && length > 0 && (markedTraceLeaf || (cs.filter === 'none' && cs.maskImage === 'none'));
         if(!trace) fade = true;
         const span = spans.get(el)!;
         items.push({el,startLine:span[0],endLine:span[1],chapter,length,weight:Math.min(4800,Math.max(300,350+Math.sqrt(length)*28)),trace,style:el.getAttribute('style'),opacity:Number(cs.opacity)});

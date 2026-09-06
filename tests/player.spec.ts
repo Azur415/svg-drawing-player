@@ -63,6 +63,12 @@ test('trace-contract containers remain splittable despite composition effects',a
   await load(page,trace,'trace-contract.svg');
   const data=await page.evaluate(()=>{const a=window.drawingPlayer.art;return{count:a.items.length,chapters:a.chapters.map((c:any)=>c.name),trace:a.items.every((i:any)=>i.trace),filter:a.svg.querySelector('#artwork')?.getAttribute('filter'),opacityGroup:a.svg.querySelector('#soft-marks')?.getAttribute('opacity'),hasStaticItem:a.items.some((i:any)=>i.el.getAttribute('data-trace-role')==='static'),hasExcludedText:a.items.some((i:any)=>i.el.localName==='text')};});
   expect(data).toEqual({count:3,chapters:['chapter-one'],trace:true,filter:'url(#soft)',opacityGroup:'.76',hasStaticItem:false,hasExcludedText:false});
+  await expect(page.locator('#notice')).toBeHidden();
+});
+test('successful imports keep fallback details without showing a toast',async({page})=>{
+  await load(page,'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="10" y="50">Hello</text></svg>','text.svg');
+  await expect(page.locator('#notice')).toBeHidden();
+  await expect(page.locator('#notes')).toBeVisible();
 });
 test('seeking is deterministic and final artwork restores original styles',async({page})=>{
   await load(page);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 — 2026-09-07
+
+- Keep successful imports quiet; only actual import failures show a toast.
+- Treat explicitly marked trace paths with local filters as replayable instead
+  of warning about an avoidable fallback.
+- Ignore equivalent CSS formatting normalization when reporting sanitized input.
+
 ## 1.3.1 — 2026-09-07
 
 - Support trace-contract SVGs that mark drawable paths with

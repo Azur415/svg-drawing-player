@@ -111,7 +111,6 @@ async function load(raw:string,name:string,id:number,signal:AbortSignal){
     $('filename').textContent=name;$('notes').hidden=!art.warnings.length;cameraChapter=-1;view=art.view.slice();
     toggleChapters(chaptersVisible);camera.load(art);$<HTMLSelectElement>('cameraMode').value='follow';selects.forEach(s=>s.refresh());
     loadMinimap();player.load(art);renderChapters();$('notice').hidden=true;
-    if(art.warnings.length)notify(art.warnings.map(k=>t(k as Key)).join(' '));
   } catch(e){if(id===importId && !signal.aborted)notify(t((e instanceof Error && e.message in messages.en?e.message:'failed') as Key));}
 }
 function beginImport(){aborter?.abort();aborter=new AbortController();const id=++importId;notify(t('loading'),true);return {id,signal:aborter.signal};}
