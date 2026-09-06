@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 2026-09-06
+
+- Add a reproducible Cloudflare Pages deployment command for the Vite build.
+- Add an optional GitHub Actions workflow for Cloudflare Pages direct uploads.
+- Document Cloudflare Pages Git integration, direct upload, and required secrets
+  for open-source forks.
+
 ## 1.2.0 — 2026-09-06
 
 - Keep speed menus open during source auto-scroll; selecting a speed takes effect

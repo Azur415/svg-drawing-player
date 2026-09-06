@@ -47,6 +47,26 @@ npm run preview
 
 Publish `dist/` to a static host. Relative asset paths support both domain roots and repository subpaths. Serve the build over HTTP; do not double-click the source HTML.
 
+### Cloudflare Pages
+
+Cloudflare Pages is the recommended production host for this static Vite site. For Git integration, connect the GitHub repository and use:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | repository root |
+
+For a local or CI direct upload, first create a Pages project in Cloudflare, then run:
+
+```sh
+npm ci
+npm run deploy:cloudflare -- --project-name=svg-drawing-player
+```
+
+The included `.github/workflows/cloudflare-pages.yml` builds every pull request and deploys `main` when these repository secrets exist: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token should have Account → Cloudflare Pages → Edit permission. Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT` if the Pages project name is not `svg-drawing-player`. Choose either Pages Git integration or the direct-upload workflow for production to avoid duplicate deployments.
+
 For GitHub Pages, put **the contents of this folder at your new repository root**, use `main`, and select **Settings → Pages → Source → GitHub Actions**. The included workflow tests and builds pull requests, and deploys pushes to main. No remote repository is created by this project. If using another default branch, adjust the workflow's branch conditions.
 
 ## Development and verification
@@ -65,6 +85,6 @@ The TypeScript implementation separates `importer` (sanitization, safe frame, so
 
 Release history: [CHANGELOG](CHANGELOG.md). Local tags preserve the v1.0.0 baseline and v1.1.0 update. Future updates follow [maintenance rules](AGENTS.md): increment the version, validate, record changes, commit and tag; remote publication is separate.
 
-Code: [MIT](LICENSE). The original bundled pavilion: [CC0](public/examples/LICENSE.txt). Imported files remain the property of their respective owners. Confirm rights before adding any other example to a public release.
+Code: [MIT](LICENSE). The original bundled pavilion: [CC0](public/examples/LICENSE.txt). Imported files remain the property of their respective owners. Confirm rights before adding any other example to a public release. The repository is intended to be public and open source; do not commit Cloudflare tokens, account credentials or private SVG files.
 
 Implementation references: [DOMPurify](https://github.com/cure53/DOMPurify), [Vite static deployment](https://vite.dev/guide/static-deploy).

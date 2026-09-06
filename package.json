@@ -1,13 +1,13 @@
 {
   "name": "svg-drawing-player",
-  "version": "1.2.0",
-  "private": true,
+  "version": "1.3.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "deploy:cloudflare": "npm run build && wrangler pages deploy dist",
     "test": "playwright test",
     "test:production": "npm run build && node scripts/verify-production.mjs"
   },
@@ -20,6 +20,7 @@
     "@types/css-tree": "^2.3.10",
     "pngjs": "^7.0.0",
     "typescript": "^5.9.2",
-    "vite": "^7.1.0"
+    "vite": "^7.1.0",
+    "wrangler": "^4.129.0"
   }
 }

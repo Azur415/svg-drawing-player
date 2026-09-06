@@ -48,6 +48,26 @@ npm run preview
 
 将 `dist/` 上传到静态托管服务即可，资源使用相对路径，支持 GitHub 仓库子路径。请通过 HTTP 服务访问，不能直接双击开发用 HTML。
 
+### Cloudflare Pages
+
+推荐使用 Cloudflare Pages 部署这个静态 Vite 网站。使用 Git 集成连接 GitHub 仓库后，填写：
+
+| 配置项 | 值 |
+| --- | --- |
+| 生产分支 | `main` |
+| 构建命令 | `npm run build` |
+| 构建输出目录 | `dist` |
+| 根目录 | 仓库根目录 |
+
+如果要本地或通过 CI 直接上传，先在 Cloudflare 创建 Pages 项目，再执行：
+
+```sh
+npm ci
+npm run deploy:cloudflare -- --project-name=svg-drawing-player
+```
+
+仓库中的 `.github/workflows/cloudflare-pages.yml` 会构建 Pull Request；当仓库配置了 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret 时，推送到 `main` 会自动部署。API Token 需要 Account → Cloudflare Pages → Edit 权限。如果 Pages 项目名称不是 `svg-drawing-player`，可以设置仓库变量 `CLOUDFLARE_PAGES_PROJECT`。生产环境请选择 Git 集成或直接上传工作流中的一种，避免重复部署。
+
 GitHub Pages：将**本文件夹中的内容作为新仓库根目录**，默认分支使用 `main`，在 Settings → Pages 中选择 GitHub Actions。附带工作流会在 PR 上测试构建，在 main 更新时部署。仓库创建和实际发布需要自行配置目标仓库；本实现未进行远程发布。
 
 ## 测试与源码组织
@@ -66,4 +86,4 @@ npm run test:production
 
 版本记录见 [CHANGELOG](CHANGELOG.md)。Git 保留 v1.0.0 基线与 v1.1.0 升级标签。后续更新按 [维护规则](AGENTS.md) 执行：更新版本号、完成验证、记录变更、提交并打标签；远程发布单独处理。
 
-代码采用 [MIT](LICENSE)。新绘制的内置简洁建筑示例采用 [CC0](public/examples/LICENSE.txt)。旧项目中的建筑不是本次发行素材，公开加入之前应确认授权。用户导入文件的权利归原权利人所有。
+代码采用 [MIT](LICENSE)。新绘制的内置简洁建筑示例采用 [CC0](public/examples/LICENSE.txt)。旧项目中的建筑不是本次发行素材，公开加入之前应确认授权。用户导入文件的权利归原权利人所有。仓库按公开开源发布；不要提交 Cloudflare Token、账号凭据或私有 SVG 文件。
