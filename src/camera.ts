@@ -13,16 +13,15 @@ export class Camera {
       const pts=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));
       const x=Math.min(...pts.map(p=>p.x)),y=Math.min(...pts.map(p=>p.y));return [x,y,Math.max(...pts.map(p=>p.x))-x,Math.max(...pts.map(p=>p.y))-y];
     }catch{return art.view.slice();}});
-    // Spatially adjacent small marks share a camera target, avoiding leaf-by-leaf jitter.
-    this.targets=[];
-    for(let i=0;i<boxes.length;){let b=boxes[i].slice(),end=i;
-      while(end+1<boxes.length&&end-i<23&&art.items[end+1].chapter===art.items[i].chapter){
-        const n=boxes[end+1],x=Math.min(b[0],n[0]),y=Math.min(b[1],n[1]);
-        const union=[x,y,Math.max(b[0]+b[2],n[0]+n[2])-x,Math.max(b[1]+b[3],n[1]+n[3])-y];
-        if(union[2]>art.view[2]*.42||union[3]>art.view[3]*.42)break;b=union;end++;
-      }
-      const target=this.framing(b);for(let j=i;j<=end;j++)this.targets[j]=target;i=end+1;
-    }
+    // One immutable framing per chapter, including all of its drawable items.
+    // Element/batch changes within that chapter must never retarget the camera.
+    const chapters=new Map<number,number[]>();
+    boxes.forEach((n,i)=>{const chapter=art.items[i].chapter,b=chapters.get(chapter);
+      if(!b){chapters.set(chapter,n.slice());return;}
+      const x=Math.min(b[0],n[0]),y=Math.min(b[1],n[1]);
+      chapters.set(chapter,[x,y,Math.max(b[0]+b[2],n[0]+n[2])-x,Math.max(b[1]+b[3],n[1]+n[3])-y]);
+    });
+    this.targets=[];chapters.forEach((bounds,chapter)=>this.targets[chapter]=this.framing(bounds));
     this.apply();
   }
   private framing(b:number[]){
@@ -30,10 +29,10 @@ export class Camera {
     const w=clamp(Math.max(b[2]*1.65,b[3]*1.65*ratio),full[2]/2.6,full[2]),h=w/ratio;
     return [clamp(b[0]+b[2]/2-w/2,full[0],full[0]+full[2]-w),clamp(b[1]+b[3]/2-h/2,full[1],full[1]+full[3]-h),w,h];
   }
-  follow(first:number,last:number,complete:boolean){
+  follow(first:number,_last:number,complete:boolean){
     if(!this.art||this.mode!=='follow')return;
-    let target=complete?this.art.view:this.targets[first]||this.art.view;
-    if(last!==first&&!complete){const other=this.targets[last];if(other){const x=Math.min(target[0],other[0]),y=Math.min(target[1],other[1]),w=Math.max(target[0]+target[2],other[0]+other[2])-x,h=Math.max(target[1]+target[3],other[1]+other[3])-y;target=this.framing([x+w*.15,y+h*.15,w*.7,h*.7]);}}
+    const chapter=this.art.items[first]?.chapter;
+    const target=complete?this.art.view:this.targets[chapter??-1]||this.art.view;
     const key=target.join(',');if(this.key===key)return;this.key=key;this.to(target);
   }
   setMode(mode:CameraMode){this.mode=mode;this.key='';if(mode==='overview'&&this.art)this.to(this.art.view);else if(mode==='manual')cancelAnimationFrame(this.raf);}

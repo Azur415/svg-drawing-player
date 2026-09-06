@@ -18,4 +18,7 @@
 .code-line.active .source-text{position:relative}.code-line.active .source-text>span:not(.code-ink){opacity:.2}
 .code-ink{position:absolute;top:0;left:0;display:block;width:var(--lit,0ch);overflow:hidden;height:100%;pointer-events:none;user-select:none;white-space:pre;color:inherit}
 .code-line.writing{background:#a03d3211}.code-line.writing .code-ink{border-right:1px solid #a03d32}
+.code-line.future .source-text{opacity:.2}.code-line.future .line-number{opacity:.45}
+.brand-mark{font-size:29px;letter-spacing:-1.3px;line-height:1.2;padding-right:22px}.brand-mark>span:first-child{font-style:normal}.brand h1{font-size:16px;font-weight:550;letter-spacing:-.3px;margin:0}
+@media(max-width:760px){.brand{gap:11px}.brand-mark{display:block;font-size:23px;padding-right:12px;letter-spacing:-1px}.brand h1{font-size:12px;max-width:110px;line-height:1.3}}
 @media(max-width:760px){.minimap{width:112px;right:14px;bottom:54px}.minimap-header{font-size:8px;padding-left:8px}.minimap-body{max-height:110px}.panel-actions{gap:3px!important}.panel-actions .select-trigger{font-size:9px;gap:7px;padding:4px 6px;min-height:26px}.mode-controls .select-trigger{font-size:10px;min-height:28px;padding:5px 10px}.speed-control .select-trigger{min-width:53px;font-size:10px;padding:4px 5px}.select-menu button{min-height:36px}}

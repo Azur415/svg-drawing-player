@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1 — 2026-09-06
+
+- Lock automatic framing for the entire chapter; only chapter changes trigger
+  smooth reframing. Bounds include every drawable item in that chapter.
+- Fade all future source lines, retaining progressive character illumination
+  for the current element. Completion brightens the full source; rewind restores
+  the correct future state, including virtualized rows.
+- Replace the header mark with Azur., remove the subtitle and rebalance the
+  SVG Drawing Player title for desktop and mobile.
+
 ## 1.1.0 — 2026-09-06
 
 - Default smooth camera tracking of the current drawing area, with spatial

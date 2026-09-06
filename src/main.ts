@@ -13,7 +13,7 @@ const icon=(name:string)=>{const paths:Record<string,string>={upload:'M12 16V3m-
 const button=(id:string,key:Key,ico:string,classes='')=>`<button id="${id}" class="${classes}" data-title="${key}" aria-label="${key}">${icon(ico)}</button>`;
 document.querySelector('#app')!.innerHTML=`
 <div class="shell">
- <header class="topbar"><div class="brand"><div class="brand-mark">s<span>v</span>g<span class="brand-dot">.</span></div><div><h1>SVG Drawing Player</h1><p data-i18n="subtitle"></p></div></div><div class="top-actions"><span class="privacy"><i></i><span data-i18n="local"></span></span><button id="language" class="text-button" data-title="language">EN / 中</button><button id="help" class="text-button" data-i18n="help"></button><button id="import" class="dark-button">${icon('upload')}<span data-i18n="import"></span></button></div></header>
+ <header class="topbar"><div class="brand"><div class="brand-mark">Azur<span class="brand-dot">.</span></div><h1>SVG Drawing Player</h1></div><div class="top-actions"><span class="privacy"><i></i><span data-i18n="local"></span></span><button id="language" class="text-button" data-title="language">EN / 中</button><button id="help" class="text-button" data-i18n="help"></button><button id="import" class="dark-button">${icon('upload')}<span data-i18n="import"></span></button></div></header>
  <div class="document-bar"><div class="document-name">${icon('file')}<span id="filename" data-i18n="noFile"></span><span id="filemeta"></span></div><div class="document-actions"><button id="notes" hidden><span class="note-dot"></span><span data-i18n="details"></span></button><button id="download" data-title="download" disabled>${icon('download')}<span data-i18n="download"></span></button></div></div>
  <nav class="mobile-tabs"><button id="canvasTab" class="selected" data-i18n="showCanvas"></button><button id="sourceTab" data-i18n="showSource"></button></nav>
  <main id="workspace" class="workspace">
@@ -78,7 +78,7 @@ function update(){
   $('filemeta').textContent=`${art.items.length.toLocaleString()} ${t('steps')} / ${art.chapters.length} ${t('layers')}`;
   $('stepCount').textContent=`${player.time>=player.total?art.items.length:player.first+1} / ${art.items.length}`;
   if(item && last){
-    code.highlight(item.startLine,last.endLine,Math.min(1,player.progress/.82));
+    code.highlight(item.startLine,last.endLine,Math.min(1,player.progress/.82),player.time>=player.total);
     camera.follow(player.first,player.last,player.time>=player.total);
     $('lineReadout').textContent=`L ${item.startLine+1}${last.endLine!==item.startLine?' — '+(last.endLine+1):''}`;
     const name=art.chapters[item.chapter].name;

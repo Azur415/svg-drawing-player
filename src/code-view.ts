@@ -1,6 +1,7 @@
 export class CodeView {
   private lines:string[]=[];private first=-1;private last=-1;private start=-1;
   private prefix:number[]=[0];private progress=0;private writingLine=-1;
+  private complete=false;
   following=true; private rowHeight=25;
   constructor(private host:HTMLElement,private onFollow:(following:boolean)=>void){
     host.addEventListener('scroll',()=>this.draw());
@@ -8,10 +9,10 @@ export class CodeView {
     host.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End'].includes(e.key))this.setFollow(false);});
     new ResizeObserver(()=>{this.start=-1;this.draw();}).observe(host);
   }
-  load(lines:string[]){this.lines=lines;this.prefix=[0];for(const line of lines)this.prefix.push(this.prefix.at(-1)!+line.length+1);this.first=this.last=-1;this.start=-1;this.progress=0;this.host.scrollTop=0;this.following=true;this.onFollow(true);this.draw();}
+  load(lines:string[]){this.lines=lines;this.prefix=[0];for(const line of lines)this.prefix.push(this.prefix.at(-1)!+line.length+1);this.first=this.last=-1;this.start=-1;this.progress=0;this.complete=false;this.host.scrollTop=0;this.following=true;this.onFollow(true);this.draw();}
   setFollow(value:boolean){this.following=value;this.onFollow(value);if(value)this.scrollToActive();}
-  highlight(first:number,last:number,progress=1){
-    const changed=first!==this.first||last!==this.last;this.progress=Math.max(0,Math.min(1,progress));
+  highlight(first:number,last:number,progress=1,complete=false){
+    const changed=first!==this.first||last!==this.last||complete!==this.complete;this.complete=complete;this.progress=Math.max(0,Math.min(1,progress));
     if(changed){this.first=first;this.last=last;this.start=-1;this.host.scrollLeft=0;}
     const n=this.prefix[first]+Math.floor((this.prefix[last+1]-this.prefix[first])*this.progress);
     let lo=first,hi=last;while(lo<hi){const m=(lo+hi+1)>>1;if(this.prefix[m]<=n)lo=m;else hi=m-1;}this.writingLine=lo;
@@ -36,6 +37,7 @@ export class CodeView {
     const rows=document.createElement('div');rows.className='code-rows';rows.style.top=`${start*this.rowHeight}px`;
     for(let i=start;i<end;i++){
       const row=document.createElement('div');row.className='code-line'+(i>=this.first&&i<=this.last?' active':'');
+      if(!this.complete&&i>this.last)row.classList.add('future');
       row.dataset.line=String(i);
       const num=document.createElement('span');num.className='line-number';num.textContent=String(i+1);
       const text=document.createElement('span');text.className='source-text';

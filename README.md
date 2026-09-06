@@ -21,7 +21,8 @@ Open the local URL printed by Vite. Drop a `.svg` file or choose the original pa
 - Every element: separate timing for each drawable object, based on geometric complexity.
 - Pause, restart, step backward/forward, drag to seek, and select 0.25×–16× speed. The timeline itself does not change when speed changes; estimated remaining time does.
 - Full source lights up character by character for the current element or batch. The reveal pauses and rewinds with playback. Manual scrolling suspends follow; the follow button restores it. Only visible code rows are mounted.
-- Camera follows the active drawing area by default with smooth, moderate zoom (up to 2.6×). Nearby small marks share a target to avoid jitter. Select Full view for a fixed overview; manual pan/zoom suspends follow. The toggleable mini-map shows the complete composition and current viewport.
+- Camera frames the entire current chapter by default, with smooth, moderate zoom (up to 2.6×) only when chapters change. Framing stays fixed within a chapter. Select Full view for a fixed overview; manual pan/zoom suspends follow. The toggleable mini-map shows the complete composition and current viewport.
+- All future source lines remain faded until playback reaches them. Completed lines stay bright; rewinding restores the corresponding faded state. The Azur. header uses a compact title without a subtitle.
 - Expand chapters, enter canvas fullscreen, or resize the desktop panels. Phones use Canvas / Code tabs. Custom menus support pointer, arrow keys and Escape.
 - Space plays/pauses and arrow keys step through elements outside focused controls. Background tabs pause playback.
 - Switch English / Chinese in the header. Language preference is the only data stored in local storage.

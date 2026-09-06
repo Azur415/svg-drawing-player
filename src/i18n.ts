@@ -1,7 +1,7 @@
 export const messages = {
   en: {
     subtitle:'A small study in lines & time.',import:'Import SVG',help:'Guide',download:'Download SVG',local:'LOCAL FILES. NO UPLOADS.',
-    canvas:'Drawing canvas',source:'Source code',chapters:'Chapters',followCamera:'Follow drawing',overview:'Full view',manualCamera:'Manual view',cameraMode:'Camera view',minimap:'Overview',fit:'Fit',fullscreen:'Fullscreen',
+    canvas:'Drawing canvas',source:'Source code',chapters:'Chapters',followCamera:'Follow chapters',overview:'Full view',manualCamera:'Manual view',cameraMode:'Camera view',minimap:'Overview',fit:'Fit',fullscreen:'Fullscreen',
     dropTitle:'Every drawing starts\nwith a line.',dropText:'Drop an SVG here and watch it unfold,\nline by line, alongside its code.',choose:'Choose an SVG',example:'Try the pavilion example',limit:'SVG · UP TO 10 MB · PROCESSED ON YOUR DEVICE',
     codeEmpty:'The drawing, in its own words.',codeHint:'Import an SVG to explore the code behind each line.',followCode:'Back to current step',
     ready:'Ready when you are',drawing:'Drawing',paused:'Paused',complete:'Complete',progress:'DRAWING PROGRESS',remaining:'remaining',
@@ -14,7 +14,7 @@ export const messages = {
   },
   zh: {
     subtitle:'看见每一笔，如何成为一幅画。',import:'导入 SVG',help:'使用指南',download:'下载 SVG',local:'本地处理，无需上传',
-    canvas:'绘制画布',source:'完整源码',chapters:'绘制章节',followCamera:'跟随绘制',overview:'全览视角',manualCamera:'手动视角',cameraMode:'镜头视角',minimap:'全览预览',fit:'适应画布',fullscreen:'全屏',
+    canvas:'绘制画布',source:'完整源码',chapters:'绘制章节',followCamera:'跟随章节',overview:'全览视角',manualCamera:'手动视角',cameraMode:'镜头视角',minimap:'全览预览',fit:'适应画布',fullscreen:'全屏',
     dropTitle:'一幅画，\n从一条线开始。',dropText:'拖入一份 SVG，让画面与代码并排展开，\n看见每一笔的来处。',choose:'选择 SVG 文件',example:'体验建筑示例',limit:'SVG · 最大 10 MB · 文件仅在本机处理',
     codeEmpty:'画面背后，也有迹可循。',codeHint:'导入 SVG，查看每条线对应的代码。',followCode:'回到当前步骤',
     ready:'等待第一笔',drawing:'正在绘制',paused:'已暂停',complete:'绘制完成',progress:'绘制进度',remaining:'预计剩余',
