@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. Drop a `.svg` file or choose the original pavilion example. Import starts a 60-second replay automatically. Files are processed locally; there is no upload endpoint, analytics, font CDN, or account.
+Open the local URL printed by Vite. Drop a `.svg` file or choose the original pavilion example. Import starts a 60-second replay automatically. The development build sends no usage analytics; the live build records anonymous usage events, while SVG files remain local and are never uploaded.
 
 ## Playback
 
@@ -26,7 +26,22 @@ Open the local URL printed by Vite. Drop a `.svg` file or choose the original pa
 - Chapters appear in a narrow translucent left rail; hide or restore it with the chapter button. Selecting a chapter keeps it open. Desktop framing reserves space for the rail; phones use an overlay and Canvas / Code tabs.
 - Change speed during playback without pausing: source auto-scroll does not dismiss the menu. Custom menus support pointer, arrow keys and Escape. Larger Helvetica-based headings and neutral gray panels improve readability.
 - Space plays/pauses and arrow keys step through elements outside focused controls. Background tabs pause playback.
-- Switch English / Chinese in the header. Language preference is the only data stored in local storage.
+- Switch English / Chinese in the header. Language preference and the local anonymous-analytics choice are the only settings stored in browser storage.
+
+## Anonymous usage analytics
+
+The live build uses a Cloudflare Pages Function and Analytics Engine to collect
+project-summary metrics: sessions, import outcomes, element/chapter counts,
+processing time, playback starts/pauses/completions, chapter selection,
+seeking, speed and camera changes, downloads and coarse error classes. It does
+not collect SVG source, full file names, accounts, raw IP, browser fingerprints
+or a cross-device identity. A random anonymous session ID is kept only in the
+current tab's `sessionStorage`. The header's anonymous-stats badge is a local
+on/off switch; the preference is stored only on that device. If the analytics
+endpoint is unavailable, the player continues normally.
+
+See [ANALYTICS.md](ANALYTICS.md) for the event layout, Cloudflare binding setup
+and ready-to-use SQL queries.
 
 This is a visualization reconstructed from a finished SVG, **not a recording of the author's actual editing history**. DOM order is the playback order. Camera movement does not modify downloaded artwork.
 
@@ -66,6 +81,12 @@ npm run deploy:cloudflare -- --project-name=svg-drawing-player
 ```
 
 The included `.github/workflows/cloudflare-pages.yml` builds every pull request and deploys `main` when these repository secrets exist: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token should have Account → Cloudflare Pages → Edit permission. Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT` if the Pages project name is not `svg-drawing-player`. Choose either Pages Git integration or the direct-upload workflow for production to avoid duplicate deployments.
+
+The anonymous usage endpoint uses the `ANALYTICS_ENGINE` binding in
+`wrangler.jsonc`. After the first production deployment, confirm under the
+Pages project's Settings → Bindings that it points to the
+`svg_drawing_player_usage` dataset. See [ANALYTICS.md](ANALYTICS.md) for
+queries and the fixed field order.
 
 For GitHub Pages, put **the contents of this folder at your new repository root**, use `main`, and select **Settings → Pages → Source → GitHub Actions**. The included workflow tests and builds pull requests, and deploys pushes to main. No remote repository is created by this project. If using another default branch, adjust the workflow's branch conditions.
 

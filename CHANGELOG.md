@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 — 2026-09-07
+
+- Add privacy-preserving Cloudflare usage analytics for sessions, SVG import
+  outcomes, playback, navigation, settings, downloads and coarse errors.
+- Keep SVG source, full file names, accounts, raw IP and cross-device identity
+  out of the telemetry payload; make analytics best effort so it cannot affect
+  the player.
+- Add a Pages Function, Analytics Engine binding configuration and SQL/query
+  documentation for project summaries.
+
 ## 1.3.2 — 2026-09-07
 
 - Keep successful imports quiet; only actual import failures show a toast.

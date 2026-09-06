@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-打开终端给出的本地网址，拖入一份 SVG，或点击“体验建筑示例”。导入后自动开始约 60 秒的演示。文件不上传，不使用账号、统计服务或在线字体。
+打开终端给出的本地网址，拖入一份 SVG，或点击“体验建筑示例”。导入后自动开始约 60 秒的演示。开发环境不发送使用统计；线上版本只发送匿名的使用事件，SVG 文件本身仍不上传。
 
 ## 功能
 
@@ -25,7 +25,13 @@ npm run dev
 - 全览小窗显示完整成稿及当前取景框，可关闭或重新开启。章节默认显示为左侧半透明窄栏，支持开关，点击章节后保持显示；桌面画布为其留出空间，手机采用浮层。支持画布全屏、调整桌面双栏宽度、手机画面／代码标签切换。
 - 播放中可实时调速，源码自动滚动不会关闭选择菜单。选择器支持鼠标、方向键和 Escape。标题优先使用 Helvetica 系列字体，关键文字放大，灰色面板区分窗口层级。
 - 空格播放暂停，左右键逐笔查看；聚焦控件或弹窗时不抢占快捷键。切到后台自动暂停。
-- 中英文切换，只在本地存储语言偏好。
+- 中英文切换，语言偏好和匿名统计开关只保存在本地。
+
+## 匿名使用统计
+
+线上版本通过 Cloudflare Pages Function 和 Analytics Engine 记录项目总结所需的使用数据：访问会话、导入成功／失败、元素与章节数量、处理耗时、播放开始／暂停／完成、章节选择、回看、速度、镜头、下载和错误类型。记录中不包含 SVG 源码、完整文件名、账号、原始 IP、浏览器指纹或跨设备身份；匿名会话编号只保存在当前浏览器标签页的 `sessionStorage` 中。页头的“匿名统计”标记可以随时关闭统计，选择只保存在本机；统计接口不可用时也不会影响导入和播放。
+
+完整事件字段、Cloudflare 绑定和 SQL 查询示例见 [ANALYTICS.md](ANALYTICS.md)。
 
 演示根据 SVG 成稿及其元素顺序重建，**不是 AI 或作者真实编辑历史的录像**。下载不包含临时描边、笔尖或当前镜头变换。
 
@@ -66,7 +72,7 @@ npm ci
 npm run deploy:cloudflare -- --project-name=svg-drawing-player
 ```
 
-仓库中的 `.github/workflows/cloudflare-pages.yml` 会构建 Pull Request；当仓库配置了 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret 时，推送到 `main` 会自动部署。API Token 需要 Account → Cloudflare Pages → Edit 权限。如果 Pages 项目名称不是 `svg-drawing-player`，可以设置仓库变量 `CLOUDFLARE_PAGES_PROJECT`。生产环境请选择 Git 集成或直接上传工作流中的一种，避免重复部署。
+仓库中的 `.github/workflows/cloudflare-pages.yml` 会构建 Pull Request；当仓库配置了 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret 时，推送到 `main` 会自动部署。API Token 需要 Account → Cloudflare Pages → Edit 权限。如果 Pages 项目名称不是 `svg-drawing-player`，可以设置仓库变量 `CLOUDFLARE_PAGES_PROJECT`。生产环境请选择 Git 集成或直接上传工作流中的一种，避免重复部署。匿名统计使用 `wrangler.jsonc` 中的 `ANALYTICS_ENGINE` 绑定；上线后请在 Pages 项目的 Settings → Bindings 中确认它指向 `svg_drawing_player_usage` 数据集。查询和字段顺序见 [ANALYTICS.md](ANALYTICS.md)。
 
 GitHub Pages：将**本文件夹中的内容作为新仓库根目录**，默认分支使用 `main`，在 Settings → Pages 中选择 GitHub Actions。附带工作流会在 PR 上测试构建，在 main 更新时部署。仓库创建和实际发布需要自行配置目标仓库；本实现未进行远程发布。
 

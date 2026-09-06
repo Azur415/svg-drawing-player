@@ -22,6 +22,17 @@ test('empty screen and original example, desktop and mobile',async({page})=>{
   await expect(page.locator('#play')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
 });
+test('anonymous analytics can be disabled locally without changing the player',async({page})=>{
+  await expect(page.locator('#privacy')).toHaveAttribute('aria-pressed','true');
+  await page.locator('#privacy').click();
+  await expect(page.locator('#privacy')).toHaveAttribute('aria-pressed','false');
+  expect(await page.evaluate(()=>localStorage.getItem('svg-player-analytics-opt-out'))).toBe('1');
+  await page.reload();
+  await expect(page.locator('#privacy')).toHaveAttribute('aria-pressed','false');
+  await page.locator('#privacy').click();
+  await expect(page.locator('#privacy')).toHaveAttribute('aria-pressed','true');
+  expect(await page.evaluate(()=>localStorage.getItem('svg-player-analytics-opt-out'))).toBeNull();
+});
 test('mouse scrubbing resumes, zoom and splitter work',async({page})=>{
   await load(page);await page.locator('#play').click();
   const box=(await page.locator('#seek').boundingBox())!;
