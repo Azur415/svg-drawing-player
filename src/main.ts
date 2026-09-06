@@ -43,7 +43,7 @@ const t=(key:Key)=>messages[lang][key];
 const player=new Player();
 const code=new CodeView($('code'),following=>{$('followCode').hidden=following;});
 let art:Artwork|null=null, aborter:AbortController|null=null, importId=0, view:number[]=[0,0,1,1], cameraChapter=-1;
-const camera=new Camera(next=>{view=next.slice();if(art)$('zoomLabel').textContent=Math.round(art.view[2]/view[2]*100)+'%';const rect=$('minimapRect');['x','y','width','height'].forEach((key,i)=>rect.setAttribute(key,String(view[i])));});
+const camera=new Camera(next=>{view=next.slice();if(art){const w=art.frame.clientWidth||art.view[2],h=art.frame.clientHeight||art.view[3],base=Math.min(w/art.view[2],h/art.view[3]);$('zoomLabel').textContent=Math.round(Math.min(w/view[2],h/view[3])/base*100)+'%';}const rect=$('minimapRect');['x','y','width','height'].forEach((key,i)=>rect.setAttribute(key,String(view[i])));});
 const selects=Array.from(document.querySelectorAll<HTMLSelectElement>('select')).map(select=>new SelectControl(select));
 let minimapVisible=true,minimapURL='';
 let noticeTimer=0;

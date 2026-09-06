@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.2 — 2026-09-06
+
+- Fit complete chapter bounds to the actual canvas aspect ratio rather than
+  the source SVG ratio, improving close-ups of hair, bags and portrait details.
+- Center the chapter with 10% padding on each side; remove the restrictive
+  2.6× cap and retain a 20× safeguard for near-zero bounds.
+- Refit on canvas resize without retargeting between elements in a chapter.
+- Calculate the zoom readout from visible scale relative to full composition.
+- Add portrait regression coverage for transformed bounds, full chapter
+  coverage, centering, mobile resize and fixed framing between chapter elements.
+
 ## 1.1.1 — 2026-09-06
 
 - Lock automatic framing for the entire chapter; only chapter changes trigger

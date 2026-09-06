@@ -4,7 +4,7 @@ test.beforeEach(async({page})=>{await page.goto('/');await page.locator('#fileIn
 test('camera stays fixed within chapters and eases only across chapters',async({page})=>{
   await expect(page.locator('#cameraModeTrigger')).toContainText('Follow chapters');
   await page.waitForTimeout(750);
-  const a=await page.evaluate(()=>(window as any).drawingPlayer.camera.view.slice());expect(a[2]).toBeGreaterThanOrEqual(1000/2.6);expect(a[2]).toBeLessThan(600);
+  const a=await page.evaluate(()=>(window as any).drawingPlayer.camera.view.slice());expect(a[2]).toBeGreaterThan(180);expect(a[2]).toBeLessThan(600);
   await page.evaluate(()=>(window as any).drawingPlayer.player.jump(2));
   await page.waitForTimeout(750);expect(await page.evaluate(()=>(window as any).drawingPlayer.camera.view)).toEqual(a);
   await page.evaluate(()=>(window as any).drawingPlayer.player.jump(3));
