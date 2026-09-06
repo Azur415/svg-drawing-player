@@ -5,6 +5,7 @@ import type { Artwork, DrawingItem } from './model';
 const NS = 'http://www.w3.org/2000/svg';
 const geometry = new Set(['path','rect','circle','ellipse','line','polygon','polyline']);
 const leaves = new Set([...geometry, 'text', 'image', 'use']);
+const traceRoles = new Set(['fill','stroke']);
 const definitions = new Set(['defs','clipPath','mask','marker','pattern','symbol','linearGradient','radialGradient','filter','title','desc','metadata','style']);
 const allowedCSS = new Set(('fill fill-opacity fill-rule stroke stroke-width stroke-opacity stroke-linecap stroke-linejoin stroke-miterlimit stroke-dasharray stroke-dashoffset opacity color stop-color stop-opacity flood-color flood-opacity lighting-color clip-path clip-rule mask filter marker-start marker-mid marker-end font-family font-size font-weight font-style letter-spacing word-spacing text-anchor dominant-baseline alignment-baseline paint-order vector-effect visibility display transform transform-origin transform-box').split(' '));
 const raster = /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
@@ -137,6 +138,10 @@ export async function importArtwork(raw: string, name: string, host: HTMLElement
     const source = lines.join('\n');
     const items: DrawingItem[] = []; const chapters: Artwork['chapters'] = [];
     let fade = false;
+    // Trace-contract SVGs may keep a composition filter on their artwork
+    // container. Their data-trace markers explicitly describe the leaves that
+    // can be replayed, so effect-only containers must remain traversable.
+    const traceDocument = !!svg.querySelector('[data-trace-chapter],[data-trace-order]');
     const win = frame.contentWindow!;
     function visit(el: SVGElement, chapter: number) {
       if(definitions.has(el.localName)) return;
@@ -147,9 +152,16 @@ export async function importArtwork(raw: string, name: string, host: HTMLElement
         const ref=el.getAttribute('href')||el.getAttributeNS('http://www.w3.org/1999/xlink','href')||'';
         if(!ref.startsWith('#')||!doc.getElementById(ref.slice(1)))return;
       }
-      if(el.localName === 'g' && el.id) { chapter = chapters.length; chapters.push({name:el.id,first:items.length}); }
-      const compound = el !== svg && el.children.length > 0 && (cs.filter !== 'none' || cs.maskImage !== 'none' || Number(cs.opacity) < 1);
-      if(leaves.has(el.localName) || compound) {
+      const traceRole = el.getAttribute('data-trace-role') || '';
+      const traceExcluded = traceDocument && (traceRole === 'static' || el.getAttribute('data-trace-exclude') === 'true');
+      const traceContainer = traceDocument && el.localName === 'g' && !!el.querySelector('[data-trace-chapter],[data-trace-order]');
+      if(el.localName === 'g' && el.id && (!traceDocument || el.hasAttribute('data-trace-chapter'))) {
+        chapter = chapters.length; chapters.push({name:el.id,first:items.length});
+      }
+      const markedTraceLeaf = traceDocument && chapter >= 0 && geometry.has(el.localName) && traceRoles.has(traceRole) && el.hasAttribute('data-trace-order');
+      const fallbackLeaf = leaves.has(el.localName) && !traceExcluded && (!traceDocument || (!el.hasAttribute('data-trace-role') && !el.hasAttribute('data-trace-order')));
+      const compound = el !== svg && el.children.length > 0 && !traceContainer && (cs.filter !== 'none' || cs.maskImage !== 'none' || Number(cs.opacity) < 1);
+      if(markedTraceLeaf || fallbackLeaf || compound) {
         if(chapter < 0) {
           chapter=chapters.findIndex(c=>c.name==='—');
           if(chapter<0){chapter=chapters.length;chapters.push({name:'—',first:items.length});}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1 — 2026-09-07
+
+- Support trace-contract SVGs that mark drawable paths with
+  `data-trace-chapter`, `data-trace-order` and `data-trace-role`.
+- Keep marked paths replayable inside composition-filtered or opacity-only
+  groups while preserving static and explicitly excluded elements.
+- Add regression coverage for nested trace containers and update compatibility
+  documentation.
+
 ## 1.3.0 — 2026-09-06
 
 - Add a reproducible Cloudflare Pages deployment command for the Vite build.

@@ -31,7 +31,7 @@ npm run dev
 
 ## 兼容性与安全处理
 
-通过浏览器原生几何接口支持相对路径、圆弧、多子路径、基础形状、嵌套分组、变换、渐变和裁切。文字、内嵌 PNG/JPEG/GIF/WebP、本地 use 引用与复杂效果淡入；影响整体合成的分组作为一个播放单元。defs 内的定义不会被重复计为绘制对象。
+通过浏览器原生几何接口支持相对路径、圆弧、多子路径、基础形状、嵌套分组、变换、渐变和裁切。文字、内嵌 PNG/JPEG/GIF/WebP 与普通复杂效果淡入；普通的整体合成分组作为一个播放单元。带有 `data-trace-chapter`、`data-trace-order` 和 `data-trace-role="fill|stroke"` 标记的 trace-contract SVG，即使路径位于整体滤镜或仅透明度分组内，也会继续逐路径播放；`data-trace-role="static"` 与 `data-trace-exclude="true"` 的元素不会进入时间轴。defs 内的定义不会被重复计为绘制对象。
 
 DOMPurify 处理标记，CSS 语法树白名单处理样式，带限制策略的沙箱 iframe 隔离画布。移除脚本、事件、foreignObject、SVG 内置动画、feImage、外链及远程字体。导入提示说明规范化或降级；代码和下载文件均为相同的处理后版本，不承诺对依赖外部资源的输入保持原貌。
 

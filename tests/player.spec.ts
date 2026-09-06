@@ -58,6 +58,12 @@ test('nested shapes are unique, commands trace, missing viewBox inferred',async(
   await load(page,'<svg xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="80" height="30"/></svg>','inferred.svg');
   const view=await page.evaluate(()=>(window as any).drawingPlayer.art.view);expect(view[2]).toBeGreaterThan(80);
 });
+test('trace-contract containers remain splittable despite composition effects',async({page})=>{
+  const trace='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><filter id="soft"><feGaussianBlur stdDeviation="1"/></filter></defs><path d="M0 0h200v200H0z" fill="white" data-trace-role="static"/><g id="artwork" filter="url(#soft)"><g id="chapter-one" data-trace-chapter="1"><path d="M20 20h60v60H20z" fill="red" data-trace-order="1" data-trace-role="fill"/><path d="M20 20h60v60H20z" fill="none" stroke="black" pathLength="1" data-trace-order="1" data-trace-role="stroke"/><g id="soft-marks" opacity=".76"><path d="M100 100h40" fill="none" stroke="blue" pathLength="1" data-trace-order="2" data-trace-role="stroke"/></g><text data-trace-exclude="true" x="20" y="120">STATIC</text></g></g><path d="M0 0h200v200H0z" fill="white" data-trace-role="static"/></svg>';
+  await load(page,trace,'trace-contract.svg');
+  const data=await page.evaluate(()=>{const a=window.drawingPlayer.art;return{count:a.items.length,chapters:a.chapters.map((c:any)=>c.name),trace:a.items.every((i:any)=>i.trace),filter:a.svg.querySelector('#artwork')?.getAttribute('filter'),opacityGroup:a.svg.querySelector('#soft-marks')?.getAttribute('opacity'),hasStaticItem:a.items.some((i:any)=>i.el.getAttribute('data-trace-role')==='static'),hasExcludedText:a.items.some((i:any)=>i.el.localName==='text')};});
+  expect(data).toEqual({count:3,chapters:['chapter-one'],trace:true,filter:'url(#soft)',opacityGroup:'.76',hasStaticItem:false,hasExcludedText:false});
+});
 test('seeking is deterministic and final artwork restores original styles',async({page})=>{
   await load(page);
   const data=await page.evaluate(()=>{const {art,player:p}=(window as any).drawingPlayer;
