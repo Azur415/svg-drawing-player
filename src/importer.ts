@@ -3,6 +3,7 @@ import * as css from 'css-tree';
 import type { Artwork, DrawingItem } from './model';
 
 const NS = 'http://www.w3.org/2000/svg';
+export const MAX_SVG_BYTES = 50 * 1024 * 1024;
 const geometry = new Set(['path','rect','circle','ellipse','line','polygon','polyline']);
 const leaves = new Set([...geometry, 'text', 'image', 'use']);
 const traceRoles = new Set(['fill','stroke']);
@@ -35,7 +36,7 @@ function sameCSS(left: string, right: string, inline: boolean): boolean {
 }
 
 export function sanitizeSVG(raw: string): { source: string; changed: boolean } {
-  if (new Blob([raw]).size > 10 * 1024 * 1024) throw Error('size');
+  if (new Blob([raw]).size > MAX_SVG_BYTES) throw Error('size');
   if (!raw.trim()) throw Error('empty');
   if (/<!DOCTYPE|<!ENTITY/i.test(raw)) throw Error('xml');
   const parsed = new DOMParser().parseFromString(raw, 'image/svg+xml');

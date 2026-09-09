@@ -1,7 +1,7 @@
 import './style.css';
 import './upgrade.css';
 import './readability.css';
-import { importArtwork } from './importer';
+import { importArtwork, MAX_SVG_BYTES } from './importer';
 import { Player, speeds } from './player';
 import { CodeView } from './code-view';
 import { Camera, type CameraMode } from './camera';
@@ -164,7 +164,7 @@ async function fileImport(files:FileList|File[],source:ImportSource='file'){
   if(files.length!==1){rejectImport(source,'multiple',files.length);notify(t('multiple'));return;}
   const file=files[0];
   if(!file.name.toLowerCase().endsWith('.svg')){rejectImport(source,'type',1,file.size);notify(t('type'));return;}
-  if(file.size>10*1024*1024){rejectImport(source,'size',1,file.size);notify(t('size'));return;}
+  if(file.size>MAX_SVG_BYTES){rejectImport(source,'size',1,file.size);notify(t('size'));return;}
   track('import_requested',{source,fileBytes:file.size});
   const {id,signal}=beginImport();try{const raw=await file.text();if(!signal.aborted)await load(raw,file.name,id,signal,{source,fileBytes:file.size});}catch{if(!signal.aborted){track('import_failed',{source,fileBytes:file.size,reason:'failed'});notify(t('failed'));}}
 }

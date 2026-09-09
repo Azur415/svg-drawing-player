@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "svg-drawing-player",
   "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-09-07",
+  "compatibility_date": "2026-09-06",
   "analytics_engine_datasets": [
     {
       "binding": "ANALYTICS_ENGINE",

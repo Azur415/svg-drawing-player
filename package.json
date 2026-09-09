@@ -1,13 +1,13 @@
 {
   "name": "svg-drawing-player",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "deploy:cloudflare": "npm run build && wrangler pages deploy dist",
+    "deploy:cloudflare": "npm run build && wrangler pages deploy dist --project-name=mysvg",
     "test": "playwright test",
     "test:production": "npm run build && node scripts/verify-production.mjs"
   },

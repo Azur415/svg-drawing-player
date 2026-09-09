@@ -77,10 +77,10 @@ For a local or CI direct upload, first create a Pages project in Cloudflare, the
 
 ```sh
 npm ci
-npm run deploy:cloudflare -- --project-name=svg-drawing-player
+npm run deploy:cloudflare
 ```
 
-The included `.github/workflows/cloudflare-pages.yml` builds every pull request and deploys `main` when these repository secrets exist: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token should have Account → Cloudflare Pages → Edit permission. Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT` if the Pages project name is not `svg-drawing-player`. Choose either Pages Git integration or the direct-upload workflow for production to avoid duplicate deployments.
+The included `.github/workflows/cloudflare-pages.yml` builds every pull request and deploys `main` when these repository secrets exist: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token should have Account → Cloudflare Pages → Edit permission. Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT` if the Pages project name is not `mysvg`. Choose either Pages Git integration or the direct-upload workflow for production to avoid duplicate deployments.
 
 The anonymous usage endpoint uses the `ANALYTICS_ENGINE` binding in
 `wrangler.jsonc`. After the first production deployment, confirm under the

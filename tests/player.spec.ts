@@ -105,10 +105,23 @@ test('sanitizes scripts and external resources and isolates CSS',async({page})=>
 });
 test('invalid, oversized and cyclic files leave current drawing intact',async({page})=>{
   await load(page);
-  for(const [name,svg] of [['broken.svg','<svg>'],['cycle.svg','<svg xmlns="http://www.w3.org/2000/svg"><g id="a"><use href="#a"/></g></svg>'],['empty.svg','<svg xmlns="http://www.w3.org/2000/svg"/>'],['huge.svg',' '.repeat(10*1024*1024+1)],['nodes.svg','<svg xmlns="http://www.w3.org/2000/svg">'+'<g/>'.repeat(20001)+'</svg>']]){
+  for(const [name,svg] of [['broken.svg','<svg>'],['cycle.svg','<svg xmlns="http://www.w3.org/2000/svg"><g id="a"><use href="#a"/></g></svg>'],['empty.svg','<svg xmlns="http://www.w3.org/2000/svg"/>'],['nodes.svg','<svg xmlns="http://www.w3.org/2000/svg">'+'<g/>'.repeat(20001)+'</svg>']]){
     await page.locator('#fileInput').setInputFiles({name,mimeType:'image/svg+xml',buffer:Buffer.from(svg)});
     await expect(page.locator('#notice')).toBeVisible();await expect(page.locator('#notice')).not.toContainText('Preparing');await expect(page.locator('#filename')).toHaveText('drawing.svg');await expect(page.locator('.art-frame')).toHaveCount(1);
   }
+  await page.evaluate(size=>{
+    const input=document.querySelector<HTMLInputElement>('#fileInput')!;
+    const transfer=new DataTransfer();
+    transfer.items.add(new File([new Uint8Array(size)],'huge.svg',{type:'image/svg+xml'}));
+    input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));
+  },50*1024*1024+1);
+  await expect(page.locator('#notice')).toBeVisible();await expect(page.locator('#notice')).toContainText('50 MB');await expect(page.locator('#filename')).toHaveText('drawing.svg');await expect(page.locator('.art-frame')).toHaveCount(1);
+});
+test('accepts SVG files above the old 10 MB limit and below 50 MB',async({page})=>{
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/><!--'+'x'.repeat(10*1024*1024)+'--></svg>';
+  await page.locator('#fileInput').setInputFiles({name:'large.svg',mimeType:'image/svg+xml',buffer:Buffer.from(svg)});
+  await expect(page.locator('#filename')).toHaveText('large.svg');
+  await expect(page.locator('.art-frame')).toHaveCount(1);
 });
 test('code can be explored, followed, and language preference persists',async({page})=>{
   await page.locator('#example').click();await expect(page.locator('#filename')).toHaveText('pavilion.svg');

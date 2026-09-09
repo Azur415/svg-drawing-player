@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 — 2026-09-09
+
+- Raise the maximum SVG file size from 10 MB to 50 MB while keeping files
+  processed locally in the browser.
+- Use one shared byte limit for preflight validation and SVG sanitization, with
+  regression coverage for both accepted and rejected large files.
+
 ## 1.4.1 — 2026-09-07
 
 - Keep the anonymous analytics privacy switch available on narrow screens as

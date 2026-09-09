@@ -69,10 +69,10 @@ npm run preview
 
 ```sh
 npm ci
-npm run deploy:cloudflare -- --project-name=svg-drawing-player
+npm run deploy:cloudflare
 ```
 
-仓库中的 `.github/workflows/cloudflare-pages.yml` 会构建 Pull Request；当仓库配置了 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret 时，推送到 `main` 会自动部署。API Token 需要 Account → Cloudflare Pages → Edit 权限。如果 Pages 项目名称不是 `svg-drawing-player`，可以设置仓库变量 `CLOUDFLARE_PAGES_PROJECT`。生产环境请选择 Git 集成或直接上传工作流中的一种，避免重复部署。匿名统计使用 `wrangler.jsonc` 中的 `ANALYTICS_ENGINE` 绑定；上线后请在 Pages 项目的 Settings → Bindings 中确认它指向 `svg_drawing_player_usage` 数据集。查询和字段顺序见 [ANALYTICS.md](ANALYTICS.md)。
+仓库中的 `.github/workflows/cloudflare-pages.yml` 会构建 Pull Request；当仓库配置了 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret 时，推送到 `main` 会自动部署。API Token 需要 Account → Cloudflare Pages → Edit 权限。如果 Pages 项目名称不是 `mysvg`，可以设置仓库变量 `CLOUDFLARE_PAGES_PROJECT`。生产环境请选择 Git 集成或直接上传工作流中的一种，避免重复部署。匿名统计使用 `wrangler.jsonc` 中的 `ANALYTICS_ENGINE` 绑定；上线后请在 Pages 项目的 Settings → Bindings 中确认它指向 `svg_drawing_player_usage` 数据集。查询和字段顺序见 [ANALYTICS.md](ANALYTICS.md)。
 
 GitHub Pages：将**本文件夹中的内容作为新仓库根目录**，默认分支使用 `main`，在 Settings → Pages 中选择 GitHub Actions。附带工作流会在 PR 上测试构建，在 main 更新时部署。仓库创建和实际发布需要自行配置目标仓库；本实现未进行远程发布。
 
